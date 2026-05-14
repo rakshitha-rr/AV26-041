@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --agri-primary: #1a4d2e;
+  --agri-secondary: #4f6f52;
+  --agri-accent: #e8dfca;
+  --agri-bg: #f5f7f5;
+  --agri-card: #ffffff;
+  --agri-text: #1a1c1a;
+  --agri-muted: #6b7280;
+}
+
+@layer base {
+  body {
+    @apply bg-[var(--agri-bg)] text-[var(--agri-text)] font-sans antialiased;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+}
+
+@layer components {
+  .app-card {
+    @apply bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300;
+  }
+  
+  .btn-primary {
+    background-color: var(--agri-primary);
+    @apply text-white font-semibold px-6 py-3 rounded-xl transition-all active:scale-[0.98] disabled:opacity-50;
+  }
+  .btn-primary:hover {
+    background-color: var(--agri-secondary);
+  }
+  
+  .btn-secondary {
+    @apply bg-white border border-gray-200 hover:bg-gray-50 text-[var(--agri-text)] font-medium px-6 py-3 rounded-xl transition-all;
+  }
+
+  .nav-link {
+    @apply flex items-center gap-3 px-4 py-3 rounded-xl text-gray-500 hover:text-[var(--agri-primary)] hover:bg-gray-100 transition-all;
+  }
+  
+  .nav-link.active {
+    color: var(--agri-primary);
+    background-color: rgba(26, 77, 46, 0.05); /* #1a4d2e with 0.05 opacity */
+    border: 1px solid rgba(26, 77, 46, 0.1);
+    @apply font-semibold;
+  }
+
+  .badge {
+    @apply px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider;
+  }
+  .badge-success { @apply badge bg-green-100 text-green-700; }
+  .badge-warning { @apply badge bg-amber-100 text-amber-700; }
+  .badge-info { @apply badge bg-blue-100 text-blue-700; }
+}
+
+/* Custom Utilities */
+.gradient-text {
+  background-image: linear-gradient(to right, var(--agri-primary), var(--agri-secondary));
+  @apply bg-clip-text text-transparent;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}

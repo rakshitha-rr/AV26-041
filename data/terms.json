@@ -1,0 +1,226 @@
+[
+  {
+    "id": 1,
+    "term": "NPK",
+    "definition": "NPK stands for Nitrogen (N), Phosphorus (P), and Potassium (K) — the three primary macronutrients essential for plant growth. Nitrogen promotes leafy growth, phosphorus supports root development and flowering, and potassium strengthens overall plant health and disease resistance.",
+    "category": "Soil",
+    "relatedTerms": ["Fertigation", "Micronutrients", "Soil Testing"]
+  },
+  {
+    "id": 2,
+    "term": "Soil Organic Carbon (SOC)",
+    "definition": "Soil Organic Carbon is the carbon stored in soil organic matter. It improves soil structure, water retention, and nutrient availability. SOC levels above 0.5% are considered good for agriculture. It is a key indicator of soil health and fertility.",
+    "category": "Soil",
+    "relatedTerms": ["Vermicompost", "Green Manure", "Organic Farming"]
+  },
+  {
+    "id": 3,
+    "term": "Drip Irrigation",
+    "definition": "A water-efficient irrigation method that delivers water directly to the plant root zone through a network of pipes, valves, and emitters. It reduces water wastage by up to 60% compared to flood irrigation and is ideal for arid regions.",
+    "category": "Irrigation",
+    "relatedTerms": ["Fertigation", "Micro Irrigation", "Precision Agriculture"]
+  },
+  {
+    "id": 4,
+    "term": "Crop Rotation",
+    "definition": "The practice of growing different types of crops in the same area across seasons. It helps maintain soil fertility, reduces pest and disease buildup, and improves soil structure. For example, alternating cereals with legumes replenishes nitrogen in the soil.",
+    "category": "Crops",
+    "relatedTerms": ["Intercropping", "Nitrogen Fixation", "Green Manure"]
+  },
+  {
+    "id": 5,
+    "term": "Mulching",
+    "definition": "Covering the soil surface with organic (straw, leaves) or inorganic (plastic sheets) materials to conserve moisture, suppress weeds, and regulate soil temperature. It reduces water evaporation by up to 25% and improves soil health over time.",
+    "category": "Soil",
+    "relatedTerms": ["Weed Management", "Soil Organic Carbon"]
+  },
+  {
+    "id": 6,
+    "term": "Vermicompost",
+    "definition": "Nutrient-rich organic fertilizer produced by earthworms breaking down organic waste. It contains essential nutrients, beneficial microbes, and growth hormones. Vermicompost improves soil structure, aeration, and water-holding capacity.",
+    "category": "Soil",
+    "relatedTerms": ["Organic Farming", "Soil Organic Carbon", "Green Manure"]
+  },
+  {
+    "id": 7,
+    "term": "pH Level",
+    "definition": "A measure of soil acidity or alkalinity on a scale of 0-14. Most crops grow best in pH 6.0-7.5. Acidic soils (pH < 6) can be corrected with lime, while alkaline soils (pH > 7.5) can be treated with gypsum or sulfur.",
+    "category": "Soil",
+    "relatedTerms": ["Soil Testing", "NPK", "Micronutrients"]
+  },
+  {
+    "id": 8,
+    "term": "Micronutrients",
+    "definition": "Essential elements needed by plants in small quantities: Iron (Fe), Zinc (Zn), Manganese (Mn), Copper (Cu), Boron (B), Molybdenum (Mo), and Chlorine (Cl). Deficiency in any of these can cause significant yield loss.",
+    "category": "Soil",
+    "relatedTerms": ["NPK", "Fertigation", "Soil Testing"]
+  },
+  {
+    "id": 9,
+    "term": "Fertigation",
+    "definition": "The technique of applying fertilizers through an irrigation system (usually drip irrigation). It allows precise nutrient delivery to plant roots, reduces fertilizer waste, and improves nutrient use efficiency by up to 30%.",
+    "category": "Irrigation",
+    "relatedTerms": ["Drip Irrigation", "NPK", "Precision Agriculture"]
+  },
+  {
+    "id": 10,
+    "term": "Intercropping",
+    "definition": "Growing two or more crops simultaneously in the same field. It maximizes land use, reduces pest risk, and can improve yields. Common combinations include maize-soybean and wheat-mustard.",
+    "category": "Crops",
+    "relatedTerms": ["Crop Rotation", "Agroforestry"]
+  },
+  {
+    "id": 11,
+    "term": "Green Manure",
+    "definition": "Growing specific crops (usually legumes like dhaincha or sunhemp) and plowing them back into the soil to add organic matter and nitrogen. It is a cost-effective way to improve soil fertility naturally.",
+    "category": "Soil",
+    "relatedTerms": ["Nitrogen Fixation", "Soil Organic Carbon", "Crop Rotation"]
+  },
+  {
+    "id": 12,
+    "term": "Integrated Pest Management (IPM)",
+    "definition": "A sustainable approach combining biological, cultural, physical, and chemical methods to manage pests with minimal environmental impact. It prioritizes prevention and uses pesticides only as a last resort.",
+    "category": "Pest Management",
+    "relatedTerms": ["Biological Control", "Seed Treatment"]
+  },
+  {
+    "id": 13,
+    "term": "Biological Control",
+    "definition": "Using natural predators, parasites, or pathogens to control pest populations. Examples include using ladybugs to control aphids, or Trichogramma wasps against stem borers in rice and sugarcane.",
+    "category": "Pest Management",
+    "relatedTerms": ["Integrated Pest Management", "Organic Farming"]
+  },
+  {
+    "id": 14,
+    "term": "Seed Treatment",
+    "definition": "Coating seeds with fungicides, insecticides, or biological agents before sowing to protect them from soil-borne diseases and pests during germination. It is a cost-effective crop protection strategy.",
+    "category": "Crops",
+    "relatedTerms": ["Germination", "Integrated Pest Management"]
+  },
+  {
+    "id": 15,
+    "term": "Kharif Season",
+    "definition": "The monsoon cropping season in India (June-October). Major kharif crops include rice, maize, cotton, soybean, groundnut, and millets. Sowing begins with the onset of the southwest monsoon.",
+    "category": "Seasons",
+    "relatedTerms": ["Rabi Season", "Zaid Season"]
+  },
+  {
+    "id": 16,
+    "term": "Rabi Season",
+    "definition": "The winter cropping season in India (October-March). Major rabi crops include wheat, barley, gram (chickpea), mustard, and peas. These crops require cool weather for growth and warm weather for ripening.",
+    "category": "Seasons",
+    "relatedTerms": ["Kharif Season", "Zaid Season"]
+  },
+  {
+    "id": 17,
+    "term": "Zaid Season",
+    "definition": "The short summer cropping season between rabi and kharif (March-June). Crops grown include watermelon, muskmelon, cucumber, and fodder crops. These require warm, dry weather and irrigation support.",
+    "category": "Seasons",
+    "relatedTerms": ["Kharif Season", "Rabi Season"]
+  },
+  {
+    "id": 18,
+    "term": "Minimum Support Price (MSP)",
+    "definition": "The price set by the Government of India at which it purchases crops from farmers to protect them from market price fluctuations. MSP is announced for 23 major crops based on CACP recommendations.",
+    "category": "Economics",
+    "relatedTerms": ["PM-KISAN", "e-NAM"]
+  },
+  {
+    "id": 19,
+    "term": "Organic Farming",
+    "definition": "An agricultural system that uses natural inputs like compost, green manure, and biological pest control instead of synthetic chemicals. Organic produce fetches 20-30% premium in the market and improves long-term soil health.",
+    "category": "Technology",
+    "relatedTerms": ["Vermicompost", "Biological Control", "Green Manure"]
+  },
+  {
+    "id": 20,
+    "term": "Hydroponics",
+    "definition": "A method of growing plants without soil, using mineral nutrient solutions in water. It allows year-round cultivation, uses 90% less water than traditional farming, and is ideal for urban agriculture.",
+    "category": "Technology",
+    "relatedTerms": ["Precision Agriculture", "Fertigation"]
+  },
+  {
+    "id": 21,
+    "term": "Soil Testing",
+    "definition": "Laboratory analysis of soil samples to determine nutrient content (N, P, K, micronutrients), pH, organic carbon, and texture. It guides fertilizer application and helps farmers optimize input costs. Government labs offer free testing via Soil Health Cards.",
+    "category": "Soil",
+    "relatedTerms": ["NPK", "pH Level", "Soil Organic Carbon"]
+  },
+  {
+    "id": 22,
+    "term": "Nitrogen Fixation",
+    "definition": "The natural process by which atmospheric nitrogen (N₂) is converted into ammonia (NH₃) by soil bacteria (Rhizobium) living in root nodules of leguminous plants. It enriches soil nitrogen without chemical fertilizers.",
+    "category": "Soil",
+    "relatedTerms": ["Green Manure", "Crop Rotation", "NPK"]
+  },
+  {
+    "id": 23,
+    "term": "Germination",
+    "definition": "The process by which a seed develops into a new plant. It requires adequate moisture, oxygen, and temperature. Germination rate (percentage of seeds that sprout) is a key indicator of seed quality.",
+    "category": "Crops",
+    "relatedTerms": ["Seed Treatment", "Mulching"]
+  },
+  {
+    "id": 24,
+    "term": "Weed Management",
+    "definition": "Techniques to control unwanted plants that compete with crops for nutrients, water, and sunlight. Methods include manual weeding, herbicides, mulching, and crop rotation. Weeds can reduce yields by 30-50% if unmanaged.",
+    "category": "Crops",
+    "relatedTerms": ["Mulching", "Integrated Pest Management", "Intercropping"]
+  },
+  {
+    "id": 25,
+    "term": "Post-Harvest Management",
+    "definition": "Handling crops after harvesting including cleaning, grading, drying, storage, and packaging. Poor post-harvest management causes 15-20% crop loss in India. Proper practices include moisture control and cold storage.",
+    "category": "Post-Harvest",
+    "relatedTerms": ["Cold Storage", "Minimum Support Price"]
+  },
+  {
+    "id": 26,
+    "term": "Cold Storage",
+    "definition": "Temperature-controlled facilities for preserving perishable agricultural produce like fruits, vegetables, and flowers. India has a cold storage capacity of ~37 million tonnes but needs 2x more to reduce post-harvest losses.",
+    "category": "Post-Harvest",
+    "relatedTerms": ["Post-Harvest Management", "Agriculture Infrastructure Fund"]
+  },
+  {
+    "id": 27,
+    "term": "Watershed Management",
+    "definition": "The process of managing water resources in a drainage basin to optimize land and water use. It includes soil conservation, afforestation, check dams, and contour bunding to prevent erosion and improve groundwater recharge.",
+    "category": "Irrigation",
+    "relatedTerms": ["Drip Irrigation", "Precision Agriculture"]
+  },
+  {
+    "id": 28,
+    "term": "Agroforestry",
+    "definition": "A land use system that integrates trees with crops and/or livestock on the same piece of land. It provides multiple benefits: timber, fruit, fodder, shade, windbreaks, and improved soil fertility through leaf litter.",
+    "category": "Technology",
+    "relatedTerms": ["Intercropping", "Green Manure", "Organic Farming"]
+  },
+  {
+    "id": 29,
+    "term": "Precision Agriculture",
+    "definition": "Technology-driven farming that uses GPS, sensors, drones, and data analytics to optimize crop inputs (water, fertilizer, pesticides) at micro-level. It can improve yields by 15-20% while reducing input costs.",
+    "category": "Technology",
+    "relatedTerms": ["Drip Irrigation", "Fertigation", "Soil Testing"]
+  },
+  {
+    "id": 30,
+    "term": "Micro Irrigation",
+    "definition": "Irrigation systems (drip and sprinkler) that deliver water in small, precise quantities to plants. Government subsidies of 55-80% are available under PM Krishi Sinchayee Yojana. It saves 30-60% water over conventional methods.",
+    "category": "Irrigation",
+    "relatedTerms": ["Drip Irrigation", "Fertigation", "Watershed Management"]
+  },
+  {
+    "id": 31,
+    "term": "Crop Insurance",
+    "definition": "Financial protection for farmers against crop loss due to natural calamities, pests, or diseases. Under PMFBY, farmers pay only 1.5-5% premium while the government covers the rest. Claims are processed via satellite and drone imagery.",
+    "category": "Economics",
+    "relatedTerms": ["PMFBY", "Minimum Support Price"]
+  },
+  {
+    "id": 32,
+    "term": "e-NAM",
+    "definition": "Electronic National Agriculture Market — a pan-India electronic trading portal linking existing APMC mandis. It enables transparent price discovery, reduces intermediaries, and allows farmers to sell produce across state borders digitally.",
+    "category": "Economics",
+    "relatedTerms": ["Minimum Support Price", "Post-Harvest Management"]
+  }
+]

@@ -1,19 +1,17 @@
 {
-  "name": "nmit-kyc",
+  "name": "agriassist-ai-backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "AgriAssist AI - Backend API Server",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node modules/ekyc/test.js"
+    "dev": "node --watch server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "axios": "^1.6.0",
     "cors": "^2.8.6",
     "dotenv": "^16.3.0",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "multer": "^1.4.5-lts.2",
+    "uuid": "^9.0.0"
   }
 }
