@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
 from models.yield_model import load_model, get_model_metrics
-from routes import prediction, simulation, risk_alerts, heatmap, soil, disease, schemes, communication, offline, auth, history, voice
+from routes import prediction, simulation, risk_alerts, heatmap, soil, disease, schemes, auth, history, voice, sms, knowledge
 from db.redis_client import connect_redis, close_redis
 from db.mongo import connect_mongo, close_mongo
 import config
@@ -75,6 +75,7 @@ app.include_router(prediction.router, prefix="/api")
 app.include_router(simulation.router, prefix="/api")
 app.include_router(risk_alerts.router, prefix="/api")
 app.include_router(history.router, prefix="/api")
+app.include_router(knowledge.router, prefix="/api")
 app.include_router(heatmap.router, prefix="/api")
 app.include_router(soil.router, prefix="/api")
 app.include_router(disease.router, prefix="/api")
@@ -95,6 +96,7 @@ async def root():
             "risk_alerts": "POST /api/risk-alerts",
             "prediction_history": "GET /api/history",
             "alerts_history": "GET /api/alerts/history",
+            "knowledge_garden": "GET /api/knowledge-garden",
             "voice_assistant": "POST /api/voice/voice-assistant",
             "send_sms": "POST /api/send-sms",
             "sms_webhook": "POST /api/webhook/sms",

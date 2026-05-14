@@ -306,3 +306,21 @@ class VoiceAssistantResponse(BaseModel):
     audio_url: str
     detected_intent: str
 
+
+# ─── Knowledge Garden ────────────────────────────────────────────
+
+class MultilingualText(BaseModel):
+    en: str
+    hi: str
+    kn: str
+
+class FarmingTerm(BaseModel):
+    id: str
+    name: MultilingualText
+    definition: MultilingualText
+    category: str
+
+class KnowledgeGardenResponse(BaseModel):
+    total: int
+    terms: List[FarmingTerm]
+

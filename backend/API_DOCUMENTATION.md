@@ -162,3 +162,21 @@ Transcribes uploaded audio to text.
 Converts text to an audio speech file.
 - **Input**: `{ "text": "...", "language": "en" }`
 - **Output**: `{ "audio_url": "..." }`
+
+### 11. Knowledge Garden
+**`GET /api/knowledge-garden`**
+Returns the complete multilingual dictionary of farming terms.
+- **Response**:
+  ```json
+  {
+    "total": 8,
+    "terms": [
+      {
+        "id": "npk",
+        "name": { "en": "NPK", "hi": "एनपीके", "kn": "ಎನ್.ಪಿ.ಕೆ" },
+        "definition": { "en": "...", "hi": "...", "kn": "..." },
+        "category": "Fertilizer"
+      }
+    ]
+  }
+  ```
