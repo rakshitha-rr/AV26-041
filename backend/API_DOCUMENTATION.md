@@ -138,3 +138,27 @@ Accepts a natural language string (e.g., "how is the weather for my crop?") and 
 
 **`POST /api/webhook/sms`**
 Configurable webhook URL for Twilio to process incoming SMS commands. Automatically responds to queries like `YIELD 750 28 6.5 45 80 60` or `SOIL 6.5 45`.
+
+### 10. Voice AI Assistant
+**`POST /api/voice/voice-assistant`**
+The main voice interface. Accepts an audio file, transcribes it, processes the query, and returns both text and audio responses.
+- **Request**: `multipart/form-data` with an `audio` file and optional `language` field.
+- **Response**:
+  ```json
+  {
+    "transcription": "how is my crop yield?",
+    "text_response": "Your crop is expected to give moderate yield. Consider adding fertilizer.",
+    "audio_url": "/api/voice/audio/unique_file_id.mp3",
+    "detected_intent": "yield_query"
+  }
+  ```
+
+**`POST /api/voice/voice-input`**
+Transcribes uploaded audio to text.
+- **Input**: `audio` file.
+- **Output**: `{ "transcription": "..." }`
+
+**`POST /api/voice/voice-output`**
+Converts text to an audio speech file.
+- **Input**: `{ "text": "...", "language": "en" }`
+- **Output**: `{ "audio_url": "..." }`

@@ -105,19 +105,37 @@ def detect_intent(query: str) -> str:
 
 def parse_offline_sms(sms_body: str) -> dict:
     """
-    Parse offline SMS command for yield prediction.
-    Format: YIELD <rainfall> <temp> <ph> <moisture> <fertilizer> <irrigation>
-    Example: YIELD 750 28 6.5 45 80 60
+    Parse offline SMS command for yield prediction, soil analysis, or risk alerts.
+    Formats: 
+      YIELD <rain> <temp> <ph> <moist> <fert> <irr>
+      SOIL <ph> <moist>
+      RISK <rain> <temp> <ph> <moist> <fert> <irr>
     """
     sms_body = sms_body.strip().upper()
 
     # Parse YIELD command
     yield_pattern = r'^YIELD\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)$'
     match = re.match(yield_pattern, sms_body)
-
     if match:
         return {
             "command": "YIELD",
+            "parsed": True,
+            "params": {
+                "rainfall_mm": float(match.group(1)),
+                "temperature_c": float(match.group(2)),
+                "soil_ph": float(match.group(3)),
+                "soil_moisture_pct": float(match.group(4)),
+                "fertilizer_kg_per_hectare": float(match.group(5)),
+                "irrigation_level_pct": float(match.group(6)),
+            },
+        }
+
+    # Parse RISK command (same params as YIELD)
+    risk_pattern = r'^RISK\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)$'
+    match = re.match(risk_pattern, sms_body)
+    if match:
+        return {
+            "command": "RISK",
             "parsed": True,
             "params": {
                 "rainfall_mm": float(match.group(1)),
@@ -141,11 +159,7 @@ def parse_offline_sms(sms_body: str) -> dict:
 
     # Parse HELP command
     if sms_body in ("HELP", "MENU"):
-        return {
-            "command": "HELP",
-            "parsed": True,
-            "params": {},
-        }
+        return {"command": "HELP", "parsed": True, "params": {}}
 
     return {"command": "UNKNOWN", "parsed": False, "params": {}, "error": f"Could not parse: {sms_body}"}
 
@@ -154,16 +168,39 @@ def format_sms_reply(command: str, result: Optional[dict] = None) -> str:
     """Format prediction result as SMS-friendly text."""
     if command == "HELP":
         return (
-            "AgriAssist SMS Commands:\n"
+            "AgriIntel SMS Commands:\n"
             "YIELD <rain> <temp> <ph> <moist> <fert> <irr>\n"
-            "SOIL <ph> <moisture>\n"
-            "HELP - Show this menu\n"
-            "Example: YIELD 750 28 6.5 45 80 60"
+            "SOIL <ph> <moist>\n"
+            "RISK <params>\n"
+            "HELP - Show this menu"
         )
     if command == "YIELD" and result:
-        y = result.get("predicted_yield", 0)
-        cat = result.get("category", "average")
-        return f"AgriAssist Yield Result:\nYield: {y} tons/hectare\nRating: {cat.upper()}\nReply HELP for more."
+        y = result.get("predicted_yield_tons_per_hectare", 0)
+        cat = result.get("yield_category", "average")
+        return f"AgriIntel Yield Result:\nYield: {y} tons/hectare\nRating: {cat.upper()}\nReply HELP for more."
     if command == "SOIL" and result:
         return f"Soil Analysis:\nQuality: {result.get('soil_quality', 'N/A')}\npH: {result.get('ph_status', 'N/A')}\nMoisture: {result.get('moisture_status', 'N/A')}"
+    if command == "RISK" and result:
+        count = result.get("total_alerts", 0)
+        level = result.get("overall_risk_level", "low")
+        return f"Risk Alerts ({count}):\nOverall Level: {level.upper()}\nCheck app for full details."
     return "Invalid command. Reply HELP for available commands."
+
+
+# ─── TwiML Generation ───────────────────────────────────────────
+
+def generate_twiml_sms_reply(message: str) -> str:
+    """Generate TwiML XML for SMS reply."""
+    from twilio.twiml.messaging_response import MessagingResponse
+    response = MessagingResponse()
+    response.message(message)
+    return str(response)
+
+
+def generate_twiml_voice_welcome_and_forward(forward_to: str) -> str:
+    """Generate TwiML XML for Voice welcome and forwarding."""
+    from twilio.twiml.voice_response import VoiceResponse, Say, Dial
+    response = VoiceResponse()
+    response.say("Welcome to the AgriIntel Smart Agriculture Assistant. Please wait while we connect you to our support agent.")
+    response.dial(forward_to)
+    return str(response)

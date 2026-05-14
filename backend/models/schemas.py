@@ -264,5 +264,45 @@ class FarmerLoginRequest(BaseModel):
 class FarmerLoginResponse(BaseModel):
     success: bool
     message: str
+    session_token: Optional[str] = None
     sms_status: str
+
+# ─── Internal & History Schemas ──────────────────────────────────
+
+class CurrentFarmer(BaseModel):
+    aadhaar_number: str
+    phone_number: str
+
+class PredictionHistoryItem(BaseModel):
+    id: str = Field(alias="_id", default="")
+    farmer_aadhaar: str
+    timestamp: str
+    input_params: dict
+    predicted_yield: float
+    yield_rating: str
+    recommendations: List[str]
+    language: str
+
+class PredictionHistoryResponse(BaseModel):
+    total: int
+    predictions: List[PredictionHistoryItem]
+
+class AlertHistoryItem(BaseModel):
+    id: str = Field(alias="_id", default="")
+    farmer_aadhaar: str
+    timestamp: str
+    alerts_generated: List[dict]
+
+class AlertHistoryResponse(BaseModel):
+    total: int
+    alerts: List[AlertHistoryItem]
+
+
+# ─── Voice AI Assistant ──────────────────────────────────────────
+
+class VoiceAssistantResponse(BaseModel):
+    transcription: str
+    text_response: str
+    audio_url: str
+    detected_intent: str
 

@@ -3,16 +3,20 @@ What-If Simulation Route — Dynamically compare yield under modified conditions
 POST /simulate-yield
 """
 
-from fastapi import APIRouter, HTTPException
-from models.schemas import SimulationRequest, SimulationResponse
+from fastapi import APIRouter, HTTPException, Depends
+from models.schemas import SimulationRequest, SimulationResponse, CurrentFarmer
 from models.yield_model import predict_yield
 from utils.interpreter import interpret_yield, interpret_simulation_comparison
+from utils.dependencies import get_current_farmer
 
 router = APIRouter(tags=["🔬 Simulation"])
 
 
 @router.post("/simulate-yield", response_model=SimulationResponse)
-async def simulate_yield(req: SimulationRequest):
+async def simulate_yield(
+    req: SimulationRequest,
+    current_farmer: CurrentFarmer = Depends(get_current_farmer)
+):
     """
     Simulate yield with modified conditions and compare with original.
     Returns both yields, percentage change, and farmer-friendly comparison.

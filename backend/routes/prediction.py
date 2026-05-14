@@ -3,16 +3,22 @@ Crop Yield Prediction Route — Core endpoint of the system.
 POST /predict-yield
 """
 
-from fastapi import APIRouter, HTTPException
-from models.schemas import YieldPredictionRequest, YieldPredictionResponse
+from fastapi import APIRouter, HTTPException, Depends
+from models.schemas import YieldPredictionRequest, YieldPredictionResponse, CurrentFarmer
 from models.yield_model import predict_yield
 from utils.interpreter import interpret_yield, get_yield_recommendations
+from utils.dependencies import get_current_farmer
+from db.mongo import get_db
+from datetime import datetime, timezone
 
 router = APIRouter(tags=["🌾 Yield Prediction"])
 
 
 @router.post("/predict-yield", response_model=YieldPredictionResponse)
-async def predict_crop_yield(req: YieldPredictionRequest):
+async def predict_crop_yield(
+    req: YieldPredictionRequest,
+    current_farmer: CurrentFarmer = Depends(get_current_farmer)
+):
     """
     Predict crop yield based on agricultural parameters.
     Returns numerical yield, category, farmer-friendly interpretation, and recommendations.
@@ -42,12 +48,26 @@ async def predict_crop_yield(req: YieldPredictionRequest):
             irrigation_level_pct=req.irrigation_level_pct,
         )
 
-        return YieldPredictionResponse(
+        response = YieldPredictionResponse(
             predicted_yield_tons_per_hectare=result["predicted_yield"],
             yield_category=result["category"],
             interpretation=interpretation,
             confidence_score=result["confidence"],
             recommendations=recommendations,
         )
+
+        db = get_db()
+        prediction_doc = {
+            "farmer_aadhaar": current_farmer.aadhaar_number,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "input_params": req.model_dump(),
+            "predicted_yield": result["predicted_yield"],
+            "yield_rating": result["category"],
+            "recommendations": recommendations,
+            "language": req.language.value
+        }
+        await db.predictions.insert_one(prediction_doc)
+
+        return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction failed: {str(e)}")

@@ -9,3 +9,11 @@ Pillow==10.3.0
 twilio==9.0.0
 python-dotenv==1.0.1
 joblib==1.4.0
+
+motor==3.4.0
+redis==5.0.4
+pymongo==4.7.0
+
+SpeechRecognition==3.10.3
+gTTS==2.5.1
+aiofiles==23.2.1

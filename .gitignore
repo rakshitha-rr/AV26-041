@@ -10,4 +10,7 @@ frontend/.next/
 backend/__pycache__/
 *.pyc
 backend/trained_models/
+backend/temp_audio/
+backend/.env
+.env
 
