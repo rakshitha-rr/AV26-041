@@ -8,9 +8,10 @@ Run with: uvicorn main:app --reload --host 0.0.0.0 --port 8000
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+import os
 
 from models.yield_model import load_model, get_model_metrics
-from routes import prediction, simulation, risk_alerts, heatmap, soil, disease, schemes, auth, history, voice, sms, knowledge
+from routes import prediction, simulation, risk_alerts, heatmap, soil, disease, schemes, auth, history, voice, sms, knowledge, chat
 from db.redis_client import connect_redis, close_redis
 from db.mongo import connect_mongo, close_mongo
 import config
@@ -80,6 +81,7 @@ app.include_router(heatmap.router, prefix="/api")
 app.include_router(soil.router, prefix="/api")
 app.include_router(disease.router, prefix="/api")
 app.include_router(schemes.router, prefix="/api")
+app.include_router(chat.router, prefix="/api")
 
 
 @app.get("/")

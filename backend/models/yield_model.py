@@ -177,7 +177,7 @@ def get_feature_importances() -> dict:
 
 if __name__ == "__main__":
     model, metrics = train_model()
-    print(f"\n📊 Model Metrics:\n{metrics}")
+    print(f"\n[METRICS] Model Metrics:\n{metrics}")
 
     # Test prediction
     result = predict_yield(
@@ -188,4 +188,4 @@ if __name__ == "__main__":
         fertilizer_kg_per_hectare=80,
         irrigation_level_pct=60,
     )
-    print(f"\n🌾 Test Prediction: {result}")
+    print(f"\n[INFO] Test Prediction: {result}")

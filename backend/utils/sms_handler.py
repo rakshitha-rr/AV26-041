@@ -1,100 +1,27 @@
 """
-SMS/WhatsApp Communication Handler.
-Integrates with Twilio for sending/receiving SMS and processing farmer queries.
+SMS/WhatsApp & Chat Communication Handler.
+Processes farmer queries and returns intelligent, multilingual responses.
 """
 
 import re
 from typing import Optional
 import config
-
-
-def send_sms(phone_number: str, message: str) -> dict:
-    """Send SMS via Twilio. Returns mock response if Twilio not configured."""
-    if config.TWILIO_ACCOUNT_SID and config.TWILIO_AUTH_TOKEN:
-        try:
-            from twilio.rest import Client
-            client = Client(config.TWILIO_ACCOUNT_SID, config.TWILIO_AUTH_TOKEN)
-            msg = client.messages.create(
-                body=message,
-                from_=config.TWILIO_PHONE_NUMBER,
-                to=phone_number,
-            )
-            return {"success": True, "message_sid": msg.sid, "status": msg.status, "detail": "SMS sent via Twilio"}
-        except Exception as e:
-            return {"success": False, "message_sid": "", "status": "failed", "detail": str(e)}
-    else:
-        return {
-            "success": True,
-            "message_sid": "DEMO_MSG_001",
-            "status": "queued",
-            "detail": f"[DEMO MODE] SMS to {phone_number}: {message[:80]}...",
-        }
-
-
-def process_chat_query(query: str, language: str = "en") -> dict:
-    """Process a natural language farmer query and return intelligent response."""
-    query_lower = query.lower().strip()
-    intent = detect_intent(query_lower)
-
-    responses = {
-        "yield_check": {
-            "response": "To check your expected crop yield, please provide: rainfall (mm), temperature (°C), soil pH, soil moisture (%), fertilizer usage (kg/hectare), and irrigation level (%). You can use our /predict-yield endpoint or send an SMS like: YIELD 750 28 6.5 45 80 60",
-            "suggestions": ["Send 'YIELD 750 28 6.5 45 80 60' via SMS", "Use the yield prediction tool on the app"],
-        },
-        "weather": {
-            "response": "Current weather conditions affect your crop significantly. High temperatures above 38°C can cause crop stress. Low rainfall below 300mm increases drought risk. Monitor local weather forecasts and adjust irrigation accordingly.",
-            "suggestions": ["Check risk alerts for your area", "Set up irrigation schedule"],
-        },
-        "soil": {
-            "response": "Soil health is crucial for good yields. Optimal pH is 6.0-7.5 and moisture should be 30-60%. Get your soil tested through the Soil Health Card Scheme (free). Use our /soil-analysis endpoint for instant analysis.",
-            "suggestions": ["Test your soil pH and moisture", "Apply for Soil Health Card"],
-        },
-        "disease": {
-            "response": "Common crop diseases in Karnataka include blast (rice), rust (wheat), and wilt (pulses). Watch for yellowing leaves, spots, or wilting. Send a photo of the affected crop to our /disease-detection endpoint for diagnosis.",
-            "suggestions": ["Upload crop photo for diagnosis", "Apply preventive fungicide"],
-        },
-        "scheme": {
-            "response": "Several government schemes can help you: PM-KISAN (₹6,000/year), PMFBY (crop insurance), Soil Health Card (free soil testing), and PMKSY (irrigation subsidies). Use /check-eligibility to see which schemes you qualify for.",
-            "suggestions": ["Check PM-KISAN eligibility", "Apply for crop insurance"],
-        },
-        "fertilizer": {
-            "response": "Balanced fertilizer application is key. For most crops, apply NPK (15:15:15) at 100-150 kg/hectare. Avoid over-fertilization (>250 kg/hectare) as it can damage crops and soil. Consider organic alternatives like vermicompost.",
-            "suggestions": ["Get soil test for precise recommendation", "Try organic fertilizers"],
-        },
-        "irrigation": {
-            "response": "Drip irrigation saves 30-50% water compared to flood irrigation. Maintain irrigation at 40-70% for most crops. During dry spells, increase frequency but avoid waterlogging. PMKSY scheme offers subsidies for micro-irrigation setup.",
-            "suggestions": ["Apply for PMKSY irrigation subsidy", "Switch to drip irrigation"],
-        },
-        "greeting": {
-            "response": "Namaskara! 🌾 Welcome to AgriAssist AI. I can help you with crop yield predictions, soil analysis, disease detection, risk alerts, and government scheme information. How can I help you today?",
-            "suggestions": ["Check crop yield prediction", "Analyze soil health", "View risk alerts"],
-        },
-        "unknown": {
-            "response": "I can help you with: 1) Crop yield predictions 2) Soil analysis 3) Disease detection 4) Risk alerts 5) Government schemes 6) Irrigation & fertilizer advice. Please ask about any of these topics!",
-            "suggestions": ["Predict my crop yield", "Analyze my soil", "Check government schemes"],
-        },
-    }
-
-    result = responses.get(intent, responses["unknown"])
-    return {
-        "query": query,
-        "response": result["response"],
-        "detected_intent": intent,
-        "suggestions": result["suggestions"],
-    }
-
+from models.yield_model import predict_yield
+from models.risk_model import analyze_risks
 
 def detect_intent(query: str) -> str:
-    """Detect the intent of a farmer's query."""
+    """Detect the intent of a farmer's query using multilingual keywords."""
+    query = query.lower().strip()
+    
     intent_keywords = {
-        "yield_check": ["yield", "crop", "harvest", "production", "how is my crop", "ugao", "fasal"],
-        "weather": ["weather", "rain", "rainfall", "temperature", "mausam", "barish"],
-        "soil": ["soil", "ph", "moisture", "mitti", "mannu"],
-        "disease": ["disease", "pest", "infection", "yellow", "spots", "wilt", "rog", "bimari"],
-        "scheme": ["scheme", "pm-kisan", "government", "subsidy", "yojana", "insurance"],
-        "fertilizer": ["fertilizer", "urea", "npk", "manure", "compost", "khad", "gobbara"],
-        "irrigation": ["irrigation", "water", "drip", "sprinkler", "sinchai", "neeru"],
-        "greeting": ["hello", "hi", "namaste", "namaskara", "help"],
+        "yield_check": ["yield", "crop", "harvest", "production", "ugao", "fasal", "iluvari", "bele", "paida"],
+        "soil": ["soil", "ph", "moisture", "mitti", "mannu", "mrunthu"],
+        "disease": ["disease", "pest", "infection", "yellow", "spots", "wilt", "rog", "bimari", "roga", "keeta"],
+        "scheme": ["scheme", "pm-kisan", "government", "subsidy", "yojana", "insurance", "beeme", "scheme"],
+        "weather": ["weather", "rain", "rainfall", "temperature", "mausam", "barish", "male", "vathavarana"],
+        "fertilizer": ["fertilizer", "urea", "npk", "manure", "compost", "khad", "gobbara", "rasagobbara"],
+        "irrigation": ["irrigation", "water", "drip", "sprinkler", "sinchai", "neeru", "neeravari"],
+        "greeting": ["hello", "hi", "namaste", "namaskara", "help", "sahaya"],
     }
 
     for intent, keywords in intent_keywords.items():
@@ -102,105 +29,161 @@ def detect_intent(query: str) -> str:
             return intent
     return "unknown"
 
+def process_chat_query(query: str, language: str = "en") -> dict:
+    """Process a natural language farmer query and return intelligent response in specific language."""
+    intent = detect_intent(query)
+    lang = language.lower()
+
+    # 7. Debug Logging
+    print(f"[DEBUG] User Query: {query}")
+    print(f"[DEBUG] Detected Intent: {intent}")
+    print(f"[DEBUG] Language: {lang}")
+
+    numbers = [float(n) for n in re.findall(r'\d+(?:\.\d+)?', query)]
+    response_text = ""
+
+    # 2. Smart Routing & 4. Context Handling
+    if intent == "yield_check":
+        if len(numbers) >= 6:
+            print("[DEBUG] API Called: predict_yield")
+            try:
+                res = predict_yield(numbers[0], numbers[1], numbers[2], numbers[3], numbers[4], numbers[5])
+                val = res["predicted_yield"]
+                cat = res["category"]
+                
+                if lang == "hi":
+                    response_text = f"अनुमानित पैदावार {val} टन/हेक्टेयर ({cat}) है। सुझाव: बेहतर उत्पादन के लिए सही खाद का प्रयोग करें।"
+                elif lang == "kn":
+                    response_text = f"ನಿರೀಕ್ಷಿತ ಇಳುವರಿ {val} ಟನ್/ಹೆಕ್ಟೇರ್ ({cat}). ಸಲಹೆ: ಉತ್ತಮ ಇಳುವರಿಗಾಗಿ ರಸಗೊಬ್ಬರ ಬಳಸಿ."
+                else:
+                    response_text = f"Expected yield is {val} tons/ha ({cat}). Recommendation: Ensure optimal NPK balance for better output."
+            except Exception as e:
+                response_text = "Error calculating yield. Please check your numbers."
+        else:
+            print("[DEBUG] API Called: Prompting for Yield Context")
+            if lang == "hi":
+                response_text = "पैदावार जानने के लिए कृपया 6 विवरण दें: बारिश (मिमी), तापमान (C), मिट्टी pH, नमी (%), खाद (किग्रा), सिंचाई (%)."
+            elif lang == "kn":
+                response_text = "ಇಳುವರಿ ತಿಳಿಯಲು 6 ವಿವರ ನೀಡಿ: ಮಳೆ (mm), ತಾಪಮಾನ (C), ಮಣ್ಣಿನ pH, ತೇವಾಂಶ (%), ಗೊಬ್ಬರ (kg), ನೀರಾವರಿ (%)."
+            else:
+                response_text = "Please provide 6 values for Yield Prediction: Rainfall (mm), Temp (C), Soil pH, Moisture (%), Fertilizer (kg), Irrigation (%)."
+                
+    elif intent == "soil" or intent == "weather":
+        if len(numbers) >= 6:
+            print("[DEBUG] API Called: analyze_risks")
+            try:
+                risks = analyze_risks(numbers[0], numbers[1], numbers[2], numbers[3], numbers[4], numbers[5])
+                if risks:
+                    r = risks[0]
+                    rec = r["recommendation"]
+                    typ = r["risk_type"]
+                    if lang == "hi":
+                        response_text = f"चेतावनी: {typ}। सुझाव: {rec}"
+                    elif lang == "kn":
+                        response_text = f"ಎಚ್ಚರಿಕೆ: {typ}। ಸಲಹೆ: {rec}"
+                    else:
+                        response_text = f"Alert: {typ}. Recommendation: {rec}"
+                else:
+                    response_text = "Conditions look optimal! Keep up the good work."
+            except Exception:
+                response_text = "Error analyzing risks."
+        else:
+            print("[DEBUG] API Called: Prompting for Soil/Weather Context")
+            if lang == "hi":
+                response_text = "मिट्टी या मौसम की जांच के लिए कृपया 6 विवरण दें: बारिश, तापमान, pH, नमी, खाद, और सिंचाई."
+            elif lang == "kn":
+                response_text = "ಮಣ್ಣು ಅಥವಾ ಹವಾಮಾನ ಪರಿಶೀಲಿಸಲು ಮಾಹಿತಿ ನೀಡಿ: ಮಳೆ, ತಾಪಮಾನ, pH, ತೇವಾಂಶ, ಗೊಬ್ಬರ, ನೀರಾವರಿ."
+            else:
+                response_text = "To analyze soil or weather risks, please provide 6 values: Rainfall, Temp, pH, Moisture, Fertilizer, and Irrigation."
+
+    elif intent == "disease":
+        if lang == "hi":
+            response_text = "बीमारी का अंदेशा: पीले पत्तों या धब्बों की जांच करें। सुझाव: छोटे कीटों के लिए नीम के तेल का उपयोग करें।"
+        elif lang == "kn":
+            response_text = "ರೋಗ: ಹಳದಿ ಎಲೆ ಅಥವಾ ಚುಕ್ಕೆಗಳನ್ನು ಗಮನಿಸಿ. ಸಲಹೆ: ಕೀಟಗಳಿಗಾಗಿ ಬೇವಿನ ಎಣ್ಣೆ ಬಳಸಿ."
+        else:
+            response_text = "Disease check: Look for yellow leaves or spots. Recommendation: Use Neem oil for minor pests."
+            
+    elif intent == "scheme":
+        if lang == "hi":
+            response_text = "योजना: PM-KISAN सालाना ₹6000 देता है। सुझाव: पंजीकरण के लिए अपनी ग्राम पंचायत से संपर्क करें।"
+        elif lang == "kn":
+            response_text = "ಯೋಜನೆ: PM-KISAN ವರ್ಷಕ್ಕೆ ₹6000 ನೀಡುತ್ತದೆ. ಸಲಹೆ: ನೋಂದಣಿಗಾಗಿ ಗ್ರಾಮ ಪಂಚಾಯತ್ ಸಂಪರ್ಕಿಸಿ."
+        else:
+            response_text = "Schemes: PM-KISAN provides ₹6000/year. Recommendation: Contact your Gram Panchayat for enrollment."
+            
+    elif intent == "greeting":
+        if lang == "hi":
+            response_text = "नमस्ते! 🌾 मैं एग्री-इंटेल एआई हूँ। मैं पैदावार, मिट्टी और योजनाओं में मदद कर सकता हूँ। मैं क्या करूँ?"
+        elif lang == "kn":
+            response_text = "ನಮಸ್ಕಾರ! 🌾 ನಾನು ಅಗ್ರಿ-ಇಂಟೆಲ್ ಎಐ. ಇಳುವರಿ, ಮಣ್ಣು ಮತ್ತು ಯೋಜನೆಗಳ ಬಗ್ಗೆ ನಾನು ಸಹಾಯ ಮಾಡಬಲ್ಲೆ. ನಾನು ಏನು ಮಾಡಲಿ?"
+        else:
+            response_text = "Namaskara! 🌾 I am AgriIntel AI. I can help with Yield, Soil, Weather, and Schemes. How can I assist you?"
+            
+    else:
+        # 3. Fallback Response
+        print("[DEBUG] API Called: Fallback Triggered")
+        if lang == "hi":
+            response_text = "मुझे समझ नहीं आया। कृपया पैदावार, मिट्टी, या फसलों के बारे में पूछें।"
+        elif lang == "kn":
+            response_text = "ನನಗೆ ಅರ್ಥವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಇಳುವರಿ, ಮಣ್ಣು ಅಥವಾ ಬೆಳೆಗಳ ಬಗ್ಗೆ ಕೇಳಿ."
+        else:
+            response_text = "I didn’t understand. Please ask about yield, soil, or crops."
+
+    return {
+        "query": query,
+        "response": response_text,
+        "detected_intent": intent,
+        "suggestions": ["Ask about Yield", "Check Soil Health", "Government Schemes"]
+    }
+
+def send_sms(phone_number: str, message: str) -> dict:
+    """Send SMS via Twilio (Simulated if credentials missing)."""
+    if config.TWILIO_ACCOUNT_SID and config.TWILIO_AUTH_TOKEN:
+        try:
+            from twilio.rest import Client
+            client = Client(config.TWILIO_ACCOUNT_SID, config.TWILIO_AUTH_TOKEN)
+            msg = client.messages.create(body=message, from_=config.TWILIO_PHONE_NUMBER, to=phone_number)
+            return {"success": True, "message_sid": msg.sid}
+        except Exception as e:
+            return {"success": False, "detail": str(e)}
+    return {"success": True, "detail": "[DEMO] SMS Sent"}
 
 def parse_offline_sms(sms_body: str) -> dict:
-    """
-    Parse offline SMS command for yield prediction, soil analysis, or risk alerts.
-    Formats: 
-      YIELD <rain> <temp> <ph> <moist> <fert> <irr>
-      SOIL <ph> <moist>
-      RISK <rain> <temp> <ph> <moist> <fert> <irr>
-    """
+    """Parse offline SMS command for yield prediction, soil analysis, or risk alerts."""
     sms_body = sms_body.strip().upper()
-
-    # Parse YIELD command
     yield_pattern = r'^YIELD\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)$'
     match = re.match(yield_pattern, sms_body)
     if match:
         return {
-            "command": "YIELD",
-            "parsed": True,
+            "command": "YIELD", "parsed": True,
             "params": {
-                "rainfall_mm": float(match.group(1)),
-                "temperature_c": float(match.group(2)),
-                "soil_ph": float(match.group(3)),
-                "soil_moisture_pct": float(match.group(4)),
-                "fertilizer_kg_per_hectare": float(match.group(5)),
-                "irrigation_level_pct": float(match.group(6)),
+                "rainfall_mm": float(match.group(1)), "temperature_c": float(match.group(2)),
+                "soil_ph": float(match.group(3)), "soil_moisture_pct": float(match.group(4)),
+                "fertilizer_kg_per_hectare": float(match.group(5)), "irrigation_level_pct": float(match.group(6)),
             },
         }
-
-    # Parse RISK command (same params as YIELD)
-    risk_pattern = r'^RISK\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)\s+([\d.]+)$'
-    match = re.match(risk_pattern, sms_body)
-    if match:
-        return {
-            "command": "RISK",
-            "parsed": True,
-            "params": {
-                "rainfall_mm": float(match.group(1)),
-                "temperature_c": float(match.group(2)),
-                "soil_ph": float(match.group(3)),
-                "soil_moisture_pct": float(match.group(4)),
-                "fertilizer_kg_per_hectare": float(match.group(5)),
-                "irrigation_level_pct": float(match.group(6)),
-            },
-        }
-
-    # Parse SOIL command: SOIL <ph> <moisture>
-    soil_pattern = r'^SOIL\s+([\d.]+)\s+([\d.]+)$'
-    match = re.match(soil_pattern, sms_body)
-    if match:
-        return {
-            "command": "SOIL",
-            "parsed": True,
-            "params": {"soil_ph": float(match.group(1)), "soil_moisture_pct": float(match.group(2))},
-        }
-
-    # Parse HELP command
-    if sms_body in ("HELP", "MENU"):
-        return {"command": "HELP", "parsed": True, "params": {}}
-
-    return {"command": "UNKNOWN", "parsed": False, "params": {}, "error": f"Could not parse: {sms_body}"}
-
+    if sms_body in ("HELP", "MENU"): return {"command": "HELP", "parsed": True, "params": {}}
+    return {"command": "UNKNOWN", "parsed": False, "params": {}}
 
 def format_sms_reply(command: str, result: Optional[dict] = None) -> str:
     """Format prediction result as SMS-friendly text."""
     if command == "HELP":
-        return (
-            "AgriIntel SMS Commands:\n"
-            "YIELD <rain> <temp> <ph> <moist> <fert> <irr>\n"
-            "SOIL <ph> <moist>\n"
-            "RISK <params>\n"
-            "HELP - Show this menu"
-        )
+        return "AgriIntel SMS: YIELD <rain> <temp> <ph> <moist> <fert> <irr>\nCALL 9916721196 for Support"
     if command == "YIELD" and result:
         y = result.get("predicted_yield_tons_per_hectare", 0)
-        cat = result.get("yield_category", "average")
-        return f"AgriIntel Yield Result:\nYield: {y} tons/hectare\nRating: {cat.upper()}\nReply HELP for more."
-    if command == "SOIL" and result:
-        return f"Soil Analysis:\nQuality: {result.get('soil_quality', 'N/A')}\npH: {result.get('ph_status', 'N/A')}\nMoisture: {result.get('moisture_status', 'N/A')}"
-    if command == "RISK" and result:
-        count = result.get("total_alerts", 0)
-        level = result.get("overall_risk_level", "low")
-        return f"Risk Alerts ({count}):\nOverall Level: {level.upper()}\nCheck app for full details."
-    return "Invalid command. Reply HELP for available commands."
-
-
-# ─── TwiML Generation ───────────────────────────────────────────
+        return f"AgriIntel Yield: {y} tons/hectare. Reply HELP for more."
+    return "Invalid command. Reply HELP for commands."
 
 def generate_twiml_sms_reply(message: str) -> str:
-    """Generate TwiML XML for SMS reply."""
     from twilio.twiml.messaging_response import MessagingResponse
     response = MessagingResponse()
     response.message(message)
     return str(response)
 
-
 def generate_twiml_voice_welcome_and_forward(forward_to: str) -> str:
-    """Generate TwiML XML for Voice welcome and forwarding."""
-    from twilio.twiml.voice_response import VoiceResponse, Say, Dial
+    from twilio.twiml.voice_response import VoiceResponse
     response = VoiceResponse()
-    response.say("Welcome to the AgriIntel Smart Agriculture Assistant. Please wait while we connect you to our support agent.")
+    response.say("Welcome to AgriIntel. Connecting you to support.")
     response.dial(forward_to)
     return str(response)

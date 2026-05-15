@@ -38,27 +38,27 @@ The server will start at `http://localhost:8000`. You can view the interactive S
 backend/
 ├── main.py                 # FastAPI application entry point
 ├── config.py               # System-wide configuration and constants
-├── data/
-│   └── generate_dataset.py # Synthetic data generator for the ML model
 ├── models/
-│   ├── schemas.py          # Pydantic models for API request/response validation
-│   ├── yield_model.py      # RandomForest ML model for crop yield prediction
-│   └── risk_model.py       # Rule-based engine for detecting agricultural risks
+│   ├── schemas.py          # Pydantic models for API validation
+│   ├── yield_model.py      # RandomForest ML model for yield prediction
+│   └── risk_model.py       # Rule-based engine for detecting risks
 ├── routes/
-│   ├── auth.py             # Farmer Aadhaar Login endpoint
-│   ├── prediction.py       # Core Yield Prediction endpoint
-│   ├── simulation.py       # What-If Simulator endpoint
-│   ├── risk_alerts.py      # Drought, stress, disease risk alerts
-│   ├── heatmap.py          # Zone-wise yield generation
-│   ├── soil.py             # Soil analysis endpoint
-│   ├── disease.py          # Crop disease detection endpoint
-│   ├── schemes.py          # Gov schemes and eligibility endpoints
-│   ├── communication.py    # NLP chat and SMS sender
-│   └── offline.py          # Offline SMS command parser
+│   ├── auth.py             # Farmer Aadhaar Login
+│   ├── prediction.py       # Core Yield Prediction
+│   ├── simulation.py       # What-If Simulator
+│   ├── risk_alerts.py      # Climate & Stress alerts
+│   ├── sms.py              # NEW: Real SMS & Call handling (Twilio)
+│   ├── knowledge.py        # NEW: Agri Dictionary (Knowledge Garden)
+│   ├── voice.py            # Multilingual Voice Assistant integration
+│   ├── soil.py             # Soil analysis
+│   ├── schemes.py          # Gov schemes
+│   └── heatmap.py          # Zone-wise yield generation
 └── utils/
-    ├── interpreter.py      # Converts ML numerical outputs into farmer-friendly text
-    ├── translator.py       # Multilingual support (EN, HI, KN)
-    └── sms_handler.py      # Twilio integration and NLP logic
+    ├── interpreter.py      # Numerical to text converter
+    ├── knowledge.py        # Dictionary data and search logic
+    ├── sms_handler.py      # Twilio integration & SMS NLP
+    ├── text_to_speech.py   # Google TTS integration
+    └── speech_to_text.py   # Google Speech API integration
 ```
 
 ---
@@ -132,51 +132,63 @@ Lists available agricultural schemes like PM-KISAN, PMFBY, and Soil Health Card.
 Checks if a farmer qualifies for schemes based on their profile.
 - **Request Body**: `{ "age": 35, "land_holding_hectares": 1.5, "is_farmer": true, "state": "Karnataka", "has_crop": true }`
 
-### 9. Communication & NLP
-**`POST /api/chat`**
-Accepts a natural language string (e.g., "how is the weather for my crop?") and returns a targeted response using intent detection.
-
-**`POST /api/webhook/sms`**
-Configurable webhook URL for Twilio to process incoming SMS commands. Automatically responds to queries like `YIELD 750 28 6.5 45 80 60` or `SOIL 6.5 45`.
-
-### 10. Voice AI Assistant
-**`POST /api/voice/voice-assistant`**
-The main voice interface. Accepts an audio file, transcribes it, processes the query, and returns both text and audio responses.
-- **Request**: `multipart/form-data` with an `audio` file and optional `language` field.
-- **Response**:
+### 9. SMS & Call Center
+**`POST /api/send-sms`**
+Manually send an SMS to a farmer.
+- **Request Body**:
   ```json
   {
-    "transcription": "how is my crop yield?",
-    "text_response": "Your crop is expected to give moderate yield. Consider adding fertilizer.",
-    "audio_url": "/api/voice/audio/unique_file_id.mp3",
-    "detected_intent": "yield_query"
+    "message": "Your yield prediction is moderate. Add fertilizer.",
+    "phone_number": "+919916721196"
   }
   ```
 
-**`POST /api/voice/voice-input`**
-Transcribes uploaded audio to text.
-- **Input**: `audio` file.
-- **Output**: `{ "transcription": "..." }`
+**`POST /api/call`**
+Initiate an outbound voice call to a farmer. Plays a welcome message and connects to support.
+- **Request Body**: `{ "to_number": "+919916721196" }`
+
+**`POST /api/webhook/sms`**
+Twilio Webhook for incoming SMS. Automatically parses commands and runs ML models.
+- **Commands**:
+  - `YIELD <rain> <temp> <ph> <moist> <fert> <irr>`: Returns yield prediction.
+  - `SOIL <ph> <moist>`: Returns soil quality analysis.
+  - `RISK <params>`: Returns risk level and alerts.
+  - `AA#...#END`: Proprietary offline protocol for soil data.
+  - `HELP`: Lists available commands.
+
+**`POST /api/webhook/voice`**
+Twilio Webhook for incoming calls. Greets the farmer and forwards the call to the support team.
+
+---
+
+### 10. Voice AI Assistant
+**`POST /api/voice/voice-assistant`**
+The main interactive voice interface. Transcribes audio, determines intent (including Knowledge Garden lookups), and returns speech.
+- **Response**: Returns transcription, text response, and `audio_url`.
 
 **`POST /api/voice/voice-output`**
 Converts text to an audio speech file.
 - **Input**: `{ "text": "...", "language": "en" }`
 - **Output**: `{ "audio_url": "..." }`
 
-### 11. Knowledge Garden
+---
+
+### 11. Knowledge Garden (Agri Dictionary)
 **`GET /api/knowledge-garden`**
 Returns the complete multilingual dictionary of farming terms.
-- **Response**:
-  ```json
-  {
-    "total": 8,
-    "terms": [
-      {
-        "id": "npk",
-        "name": { "en": "NPK", "hi": "एनपीके", "kn": "ಎನ್.ಪಿ.ಕೆ" },
-        "definition": { "en": "...", "hi": "...", "kn": "..." },
-        "category": "Fertilizer"
-      }
-    ]
-  }
-  ```
+
+**`GET /api/knowledge`**
+Fetches specific term details (Definition, Usage, Simple Explanation).
+- **Query Param**: `term` (ID or name)
+
+**`GET /api/knowledge/search`**
+Partial name matching search.
+- **Query Param**: `query`
+
+**`GET /api/knowledge/suggestions`**
+Returns a list of all term names for autocomplete.
+
+**`GET /api/knowledge/voice`**
+Generates speech for a term's **Simple Explanation** in the selected language.
+- **Query Params**: `term_id`, `language`
+- **Response**: `{ "audio_url": "..." }`

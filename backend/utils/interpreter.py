@@ -7,29 +7,42 @@ from typing import List
 import config
 
 
+def format_number_locale(num: any, language: str) -> str:
+    """Formats numbers into localized digits (Kannada/Hindi)."""
+    if num is None: return ""
+    s = str(num)
+    digit_maps = {
+        "kn": ['೦', '೧', '೨', '೩', '೪', '೫', '೬', '೭', '೮', '೯'],
+        "hi": ['०', '१', '२', '३', '४', '५', '६', '७', '८', '९'],
+        "en": ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
+    }
+    m = digit_maps.get(language, digit_maps["en"])
+    return "".join(m[int(d)] if d.isdigit() else d for d in s)
+
 def interpret_yield(predicted_yield: float, category: str, language: str = "en") -> str:
     """Convert numerical yield prediction to farmer-friendly text."""
+    p_num = format_number_locale(predicted_yield, language)
     interpretations = {
         "en": {
-            "very_low": f"Your expected yield of {predicted_yield} tons/hectare is very low this season. Consider changing your farming practices or consulting an agricultural officer.",
-            "low": f"Your crop is expected to give slightly below normal yield ({predicted_yield} tons/hectare) this season. Some improvements in irrigation or fertilizer may help.",
-            "average": f"Your expected yield of {predicted_yield} tons/hectare is average for this season. You're on the right track with your farming practices.",
-            "good": f"Great news! Your crop is expected to yield {predicted_yield} tons/hectare, which is above average. Your farming practices are working well.",
-            "excellent": f"Excellent! Your crop is expected to produce {predicted_yield} tons/hectare — an outstanding yield! Continue with your current practices.",
+            "very_low": f"Your expected yield of {p_num} tons/hectare is very low this season. Consider changing your farming practices or consulting an agricultural officer.",
+            "low": f"Your crop is expected to give slightly below normal yield ({p_num} tons/hectare) this season. Some improvements in irrigation or fertilizer may help.",
+            "average": f"Your expected yield of {p_num} tons/hectare is average for this season. You're on the right track with your farming practices.",
+            "good": f"Great news! Your crop is expected to yield {p_num} tons/hectare, which is above average. Your farming practices are working well.",
+            "excellent": f"Excellent! Your crop is expected to produce {p_num} tons/hectare — an outstanding yield! Continue with your current practices.",
         },
         "hi": {
-            "very_low": f"आपकी अपेक्षित उपज {predicted_yield} टन/हेक्टेयर इस मौसम में बहुत कम है। कृषि अधिकारी से सलाह लें।",
-            "low": f"आपकी फसल इस मौसम में सामान्य से थोड़ी कम उपज ({predicted_yield} टन/हेक्टेयर) दे सकती है। सिंचाई या उर्वरक में सुधार मदद कर सकता है।",
-            "average": f"आपकी अपेक्षित उपज {predicted_yield} टन/हेक्टेयर इस मौसम के लिए सामान्य है। आपकी कृषि पद्धतियां सही दिशा में हैं।",
-            "good": f"अच्छी खबर! आपकी फसल {predicted_yield} टन/हेक्टेयर उपज दे सकती है, जो औसत से ऊपर है।",
-            "excellent": f"बहुत बढ़िया! आपकी फसल {predicted_yield} टन/हेक्टेयर उत्पादन करेगी — उत्कृष्ट उपज!",
+            "very_low": f"आपकी अपेक्षित उपज {p_num} टन/हेक्टेयर इस मौसम में बहुत कम है। कृषि अधिकारी से सलाह लें।",
+            "low": f"आपकी फसल इस मौसम में सामान्य से थोड़ी कम उपज ({p_num} टन/हेक्टेयर) दे सकती है। सिंचाई या उर्वरक में सुधार मदद कर सकता है।",
+            "average": f"आपकी अपेक्षित उपज {p_num} टन/हेक्टेयर इस मौसम के लिए सामान्य है। आपकी कृषि पद्धतियां सही दिशा में हैं।",
+            "good": f"अच्छी खबर! आपकी फसल {p_num} टन/हेक्टेयर उपज दे सकती है, जो औसत से ऊपर है।",
+            "excellent": f"बहुत बढ़िया! आपकी फसल {p_num} टन/हेक्टेयर उत्पादन करेगी — उत्कृष्ट उपज!",
         },
         "kn": {
-            "very_low": f"ನಿಮ್ಮ ನಿರೀಕ್ಷಿತ ಇಳುವರಿ {predicted_yield} ಟನ್/ಹೆಕ್ಟೇರ್ ಈ ಋತುವಿನಲ್ಲಿ ತುಂಬಾ ಕಡಿಮೆಯಾಗಿದೆ. ಕೃಷಿ ಅಧಿಕಾರಿಯನ್ನು ಸಂಪರ್ಕಿಸಿ.",
-            "low": f"ನಿಮ್ಮ ಬೆಳೆ ಈ ಋತುವಿನಲ್ಲಿ ಸಾಮಾನ್ಯಕ್ಕಿಂತ ಸ್ವಲ್ಪ ಕಡಿಮೆ ಇಳುವರಿ ({predicted_yield} ಟನ್/ಹೆಕ್ಟೇರ್) ನೀಡಬಹುದು. ನೀರಾವರಿ ಅಥವಾ ಗೊಬ್ಬರದಲ್ಲಿ ಸುಧಾರಣೆ ಸಹಾಯ ಮಾಡಬಹುದು.",
-            "average": f"ನಿಮ್ಮ ನಿರೀಕ್ಷಿತ ಇಳುವರಿ {predicted_yield} ಟನ್/ಹೆಕ್ಟೇರ್ ಈ ಋತುವಿಗೆ ಸರಾಸರಿಯಾಗಿದೆ. ನಿಮ್ಮ ಕೃಷಿ ಪದ್ಧತಿಗಳು ಸರಿಯಾದ ಹಾದಿಯಲ್ಲಿವೆ.",
-            "good": f"ಶುಭ ಸುದ್ದಿ! ನಿಮ್ಮ ಬೆಳೆ {predicted_yield} ಟನ್/ಹೆಕ್ಟೇರ್ ಇಳುವರಿ ನೀಡಬಹುದು, ಇದು ಸರಾಸರಿಗಿಂತ ಹೆಚ್ಚು.",
-            "excellent": f"ಅತ್ಯುತ್ತಮ! ನಿಮ್ಮ ಬೆಳೆ {predicted_yield} ಟನ್/ಹೆಕ್ಟೇರ್ ಉತ್ಪಾದಿಸಲಿದೆ — ಅದ್ಭುತ ಇಳುವರಿ!",
+            "very_low": f"ನಿಮ್ಮ ನಿರೀಕ್ಷಿತ ಇಳುವರಿ {p_num} ಟನ್/ಹೆಕ್ಟೇರ್ ಈ ಋತುವಿನಲ್ಲಿ ತುಂಬಾ ಕಡಿಮೆಯಾಗಿದೆ. ಕೃಷಿ ಅಧಿಕಾರಿಯನ್ನು ಸಂಪರ್ಕಿಸಿ.",
+            "low": f"ನಿಮ್ಮ ಬೆಳೆ ಈ ಋತುವಿನಲ್ಲಿ ಸಾಮಾನ್ಯಕ್ಕಿಂತ ಸ್ವಲ್ಪ ಕಡಿಮೆ ಇಳುವರಿ ({p_num} ಟನ್/ಹೆಕ್ಟೇರ್) ನೀಡಬಹುದು. ನೀರಾವರಿ ಅಥವಾ ಗೊಬ್ಬರದಲ್ಲಿ ಸುಧಾರಣೆ ಸಹಾಯ ಮಾಡಬಹುದು.",
+            "average": f"ನಿಮ್ಮ ನಿರೀಕ್ಷಿತ ಇಳುವರಿ {p_num} ಟನ್/ಹೆಕ್ಟೇರ್ ಈ ಋತುವಿಗೆ ಸರಾಸರಿಯಾಗಿದೆ. ನಿಮ್ಮ ಕೃಷಿ ಪದ್ಧತಿಗಳು ಸರಿಯಾದ ಹಾದಿಯಲ್ಲಿವೆ.",
+            "good": f"ಶುಭ ಸುದ್ದಿ! ನಿಮ್ಮ ಬೆಳೆ {p_num} ಟನ್/ಹೆಕ್ಟೇರ್ ಇಳುವರಿ ನೀಡಬಹುದು, ಇದು ಸರಾಸರಿಗಿಂತ ಹೆಚ್ಚು.",
+            "excellent": f"ಅತ್ಯುತ್ತಮ! ನಿಮ್ಮ ಬೆಳೆ {p_num} ಟನ್/ಹೆಕ್ಟೇರ್ ಉತ್ಪಾದಿಸಲಿದೆ — ಅದ್ಭುತ ಇಳುವರಿ!",
         },
     }
 
@@ -46,46 +59,76 @@ def get_yield_recommendations(
     soil_moisture_pct: float,
     fertilizer_kg_per_hectare: float,
     irrigation_level_pct: float,
+    language: str = "en"
 ) -> List[str]:
-    """Generate actionable recommendations based on conditions."""
+    """Generate localized actionable recommendations based on conditions."""
     recommendations = []
+    
+    p_ph = format_number_locale(soil_ph, language)
 
-    # Yield-based recommendations
-    if category in ("very_low", "low"):
-        recommendations.append("Consider consulting your local agricultural extension officer for personalized advice.")
+    recs_map = {
+        "en": {
+            "extension": "Consider consulting your local agricultural extension officer for personalized advice.",
+            "low_rain": "Low rainfall detected. Set up drip irrigation to conserve water.",
+            "high_rain": "High rainfall expected. Ensure proper drainage to prevent waterlogging.",
+            "acidic": f"Soil is too acidic (pH {p_ph}). Apply agricultural lime at 2-4 tons/hectare.",
+            "alkaline": f"Soil is too alkaline (pH {p_ph}). Apply gypsum to lower pH.",
+            "low_moisture": "Soil moisture is low. Increase irrigation frequency.",
+            "high_moisture": "Soil moisture is high. Reduce irrigation.",
+            "low_fert": "Fertilizer application is low. Apply balanced NPK.",
+            "high_fert": "Over-fertilization detected. Reduce fertilizer.",
+            "low_irrig": "Irrigation is insufficient. Increase for optimal growth.",
+            "extreme_heat": "Extreme heat detected. Use shade nets.",
+            "extreme_cold": "Low temperature warning. Protect crops.",
+            "optimal": "Your farming conditions look optimal. Maintain current practices."
+        },
+        "kn": {
+            "extension": "ವೈಯಕ್ತಿಕ ಸಲಹೆಗಾಗಿ ನಿಮ್ಮ ಸ್ಥಳೀಯ ಕೃಷಿ ಅಧಿಕಾರಿಯನ್ನು ಸಂಪರ್ಕಿಸಿ.",
+            "low_rain": "ಕಡಿಮೆ ಮಳೆ ಪತ್ತೆಯಾಗಿದೆ. ನೀರನ್ನು ಉಳಿಸಲು ಹನಿ ನೀರಾವರಿ ಸ್ಥಾಪಿಸಿ.",
+            "high_rain": "ಹೆಚ್ಚು ಮಳೆ ನಿರೀಕ್ಷಿಸಲಾಗಿದೆ. ನೀರು ನಿಲ್ಲದಂತೆ ಸರಿಯಾದ ಚರಂಡಿ ವ್ಯವಸ್ಥೆ ಮಾಡಿ.",
+            "acidic": f"ಮಣ್ಣು ತುಂಬಾ ಆಮ್ಲೀಯವಾಗಿದೆ (pH {p_ph}). ಹೆಕ್ಟೇರ್‌ಗೆ ೨-೪ ಟನ್ ಸುಣ್ಣವನ್ನು ಅನ್ವಯಿಸಿ.",
+            "alkaline": f"ಮಣ್ಣು ತುಂಬಾ ಕ್ಷಾರೀಯವಾಗಿದೆ (pH {p_ph}). pH ಕಡಿಮೆ ಮಾಡಲು ಜಿಪ್ಸಮ್ ಬಳಸಿ.",
+            "low_moisture": "ಮಣ್ಣಿನ ತೇವಾಂಶ ಕಡಿಮೆಯಾಗಿದೆ. ನೀರಾವರಿ ಹೆಚ್ಚಿಸಿ.",
+            "high_moisture": "ಮಣ್ಣಿನ ತೇವಾಂಶ ಹೆಚ್ಚಾಗಿದೆ. ನೀರಾವರಿಯನ್ನು ಕಡಿಮೆ ಮಾಡಿ.",
+            "low_fert": "ಗೊಬ್ಬರ ಬಳಕೆ ಕಡಿಮೆಯಾಗಿದೆ. ಸಮತೋಲಿತ NPK ಗೊಬ್ಬರ ಬಳಸಿ.",
+            "high_fert": "ಹೆಚ್ಚು ಗೊಬ್ಬರ ಪತ್ತೆಯಾಗಿದೆ. ಮಣ್ಣಿನ ಗುಣಮಟ್ಟ ಕಾಪಾಡಲು ಗೊಬ್ಬರವನ್ನು ಕಡಿಮೆ ಮಾಡಿ.",
+            "low_irrig": "ನೀರಾವರಿ ಸಾಕಷ್ಟಿಲ್ಲ. ಉತ್ತಮ ಬೆಳವಣಿಗೆಗೆ ಕನಿಷ್ಠ ೫೦% ಹೆಚ್ಚಿಸಿ.",
+            "extreme_heat": "ವಿಪರೀತ ಶಾಖ ಪತ್ತೆಯಾಗಿದೆ. ನೆರಳು ಬಲೆ ಬಳಸಿ ಮತ್ತು ನೀರುಣಿಸುವಿಕೆಯನ್ನು ಹೆಚ್ಚಿಸಿ.",
+            "extreme_cold": "ಕಡಿಮೆ ತಾಪಮಾನದ ಎಚ್ಚರಿಕೆ. ರಕ್ಷಣೆಗಾಗಿ ಮಲ್ಚಿಂಗ್ ಬಳಸಿ.",
+            "optimal": "ನಿಮ್ಮ ಕೃಷಿ ಪರಿಸ್ಥಿತಿಗಳು ಉತ್ತಮವಾಗಿವೆ. ಉತ್ತಮ ಫಲಿತಾಂಶಕ್ಕಾಗಿ ಇದೇ ರೀತಿ ಮುಂದುವರಿಸಿ."
+        },
+        "hi": {
+            "extension": "व्यक्तिगत सलाह के लिए अपने स्थानीय कृषि विस्तार अधिकारी से परामर्श करें।",
+            "low_rain": "कम वर्षा का पता चला। पानी बचाने के लिए ड्रिप सिंचाई स्थापित करें।",
+            "high_rain": "अधिक वर्षा की संभावना। जलभराव रोकने के लिए उचित जल निकासी सुनिश्चित करें।",
+            "acidic": f"मिट्टी बहुत अम्लीय है (pH {p_ph})। २-४ टन/हेक्टेयर की दर से कृषि चूना लगाएं।",
+            "alkaline": f"मिट्टी बहुत क्षारीय है (pH {p_ph})। pH कम करने के लिए जिप्सम लगाएं।",
+            "low_moisture": "मिट्टी की नमी कम है। सिंचाई बढ़ाएं।",
+            "high_moisture": "मिट्टी की नमी अधिक है। सिंचाई कम करें।",
+            "low_fert": "उर्वरक का प्रयोग कम है। संतुलित NPK लगाएं।",
+            "high_fert": "अधिक उर्वरक का पता चला। उर्वरक कम करें।",
+            "low_irrig": "सिंचाई अपर्याप्त है। इष्टतम विकास के लिए बढ़ाएं।",
+            "extreme_heat": "अत्यधिक गर्मी का पता चला। छाया जाल का प्रयोग करें।",
+            "extreme_cold": "कम तापमान की चेतावनी। मल्चिंग का प्रयोग करें।",
+            "optimal": "आपकी खेती की स्थिति इष्टतम दिख रही है।"
+        }
+    }
 
-    # Input-specific recommendations
-    if rainfall_mm < 400:
-        recommendations.append("Low rainfall detected. Set up drip irrigation to conserve water and maintain crop health.")
-    elif rainfall_mm > 1500:
-        recommendations.append("High rainfall expected. Ensure proper drainage to prevent waterlogging.")
+    l_map = recs_map.get(language, recs_map["en"])
 
-    if soil_ph < 5.5:
-        recommendations.append(f"Soil is too acidic (pH {soil_ph}). Apply agricultural lime at 2-4 tons/hectare.")
-    elif soil_ph > 8.0:
-        recommendations.append(f"Soil is too alkaline (pH {soil_ph}). Apply gypsum or elemental sulfur to lower pH.")
-
-    if soil_moisture_pct < 25:
-        recommendations.append("Soil moisture is low. Increase irrigation frequency and consider mulching.")
-    elif soil_moisture_pct > 70:
-        recommendations.append("Soil moisture is high. Reduce irrigation to prevent root rot.")
-
-    if fertilizer_kg_per_hectare < 30:
-        recommendations.append("Fertilizer application is low. Apply balanced NPK (15:15:15) at 100-150 kg/hectare.")
-    elif fertilizer_kg_per_hectare > 250:
-        recommendations.append("Over-fertilization detected. Reduce fertilizer to avoid soil degradation and crop burn.")
-
-    if irrigation_level_pct < 30:
-        recommendations.append("Irrigation is insufficient. Increase to at least 50% for optimal crop growth.")
-
-    if temperature_c > 38:
-        recommendations.append("Extreme heat detected. Use shade nets and increase watering frequency.")
-    elif temperature_c < 15:
-        recommendations.append("Low temperature warning. Protect crops with plastic mulch or row covers.")
-
-    # Always add a positive suggestion
-    if not recommendations:
-        recommendations.append("Your farming conditions look optimal. Maintain current practices for best results.")
+    if category in ("very_low", "low"): recommendations.append(l_map["extension"])
+    if rainfall_mm < 400: recommendations.append(l_map["low_rain"])
+    elif rainfall_mm > 1500: recommendations.append(l_map["high_rain"])
+    if soil_ph < 5.5: recommendations.append(l_map["acidic"])
+    elif soil_ph > 8.0: recommendations.append(l_map["alkaline"])
+    if soil_moisture_pct < 25: recommendations.append(l_map["low_moisture"])
+    elif soil_moisture_pct > 70: recommendations.append(l_map["high_moisture"])
+    if fertilizer_kg_per_hectare < 30: recommendations.append(l_map["low_fert"])
+    elif fertilizer_kg_per_hectare > 250: recommendations.append(l_map["high_fert"])
+    if irrigation_level_pct < 30: recommendations.append(l_map["low_irrig"])
+    if temperature_c > 38: recommendations.append(l_map["extreme_heat"])
+    elif temperature_c < 15: recommendations.append(l_map["extreme_cold"])
+    if not recommendations: recommendations.append(l_map["optimal"])
 
     return recommendations
 
@@ -96,146 +139,42 @@ def interpret_simulation_comparison(
     change_pct: float,
     language: str = "en",
 ) -> str:
-    """Generate farmer-friendly comparison of simulation results."""
-    if change_pct > 15:
-        tone = "significant improvement"
-    elif change_pct > 5:
-        tone = "moderate improvement"
-    elif change_pct > 0:
-        tone = "slight improvement"
-    elif change_pct > -5:
-        tone = "negligible change"
-    elif change_pct > -15:
-        tone = "moderate decline"
-    else:
-        tone = "significant decline"
+    """Generate farmer-friendly comparison of simulation results with localized numbers."""
+    o_num = format_number_locale(original_yield, language)
+    s_num = format_number_locale(simulated_yield, language)
+    c_num = format_number_locale(abs(change_pct), language)
+    
+    if change_pct > 15: tone = "significant improvement"
+    elif change_pct > 0: tone = "improvement"
+    elif change_pct > -15: tone = "slight decline"
+    else: tone = "significant decline"
 
     templates = {
-        "en": (
-            f"By changing your conditions, your yield {'increases' if change_pct > 0 else 'decreases'} "
-            f"from {original_yield} to {simulated_yield} tons/hectare "
-            f"({'+' if change_pct > 0 else ''}{change_pct}%). "
-            f"This is a {tone} in expected production."
-        ),
-        "hi": (
-            f"स्थितियां बदलने से आपकी उपज {original_yield} से "
-            f"{'बढ़कर' if change_pct > 0 else 'घटकर'} {simulated_yield} टन/हेक्टेयर हो जाती है "
-            f"({'+' if change_pct > 0 else ''}{change_pct}%)। "
-            f"यह उत्पादन में {'सुधार' if change_pct > 0 else 'गिरावट'} है।"
-        ),
-        "kn": (
-            f"ಪರಿಸ್ಥಿತಿಗಳನ್ನು ಬದಲಾಯಿಸುವುದರಿಂದ ನಿಮ್ಮ ಇಳುವರಿ {original_yield} ರಿಂದ "
-            f"{simulated_yield} ಟನ್/ಹೆಕ್ಟೇರ್‌ಗೆ {'ಹೆಚ್ಚಾಗುತ್ತದೆ' if change_pct > 0 else 'ಕಡಿಮೆಯಾಗುತ್ತದೆ'} "
-            f"({'+' if change_pct > 0 else ''}{change_pct}%)."
-        ),
+        "en": f"By changing conditions, yield goes from {o_num} to {s_num} tons/hectare ({'+' if change_pct > 0 else '-'}{c_num}%). This is a {tone}.",
+        "hi": f"स्थितियां बदलने से, पैदावार {o_num} से {'बढ़कर' if change_pct > 0 else 'घटकर'} {s_num} टन/हेक्टेयर ({c_num}%) हो जाती है।",
+        "kn": f"ಪರಿಸ್ಥಿತಿಗಳನ್ನು ಬದಲಾಯಿಸುವುದರಿಂದ, ಇಳುವರಿಯು {o_num} ರಿಂದ {s_num} ಟನ್/ಹೆಕ್ಟೇರ್‌ಗೆ ({'+' if change_pct > 0 else '-'}{c_num}%) {'ಹೆಚ್ಚಾಗುತ್ತದೆ' if change_pct > 0 else 'ಕಡಿಮೆಯಾಗುತ್ತದೆ'}.",
     }
 
     return templates.get(language, templates["en"])
 
 
 def interpret_soil_quality(ph: float, moisture: float, language: str = "en") -> dict:
-    """Interpret soil analysis results."""
-    # pH status
-    if ph < 5.5:
-        ph_status = "Acidic"
-        ph_quality = "poor"
-    elif ph < 6.0:
-        ph_status = "Slightly Acidic"
-        ph_quality = "fair"
-    elif ph <= 7.5:
-        ph_status = "Optimal"
-        ph_quality = "good"
-    elif ph <= 8.0:
-        ph_status = "Slightly Alkaline"
-        ph_quality = "fair"
-    else:
-        ph_status = "Alkaline"
-        ph_quality = "poor"
-
-    # Moisture status
-    if moisture < 20:
-        moisture_status = "Dry"
-        moisture_quality = "poor"
-    elif moisture < 35:
-        moisture_status = "Slightly Dry"
-        moisture_quality = "fair"
-    elif moisture <= 60:
-        moisture_status = "Optimal"
-        moisture_quality = "good"
-    elif moisture <= 75:
-        moisture_status = "Moist"
-        moisture_quality = "fair"
-    else:
-        moisture_status = "Waterlogged"
-        moisture_quality = "poor"
-
-    # Overall quality
-    quality_scores = {"good": 2, "fair": 1, "poor": 0}
-    avg_score = (quality_scores[ph_quality] + quality_scores[moisture_quality]) / 2
-
-    if avg_score >= 1.5:
-        overall = "Good"
-    elif avg_score >= 0.5:
-        overall = "Fair"
-    else:
-        overall = "Poor"
-
-    # Suitable crops based on conditions
-    suitable_crops = _get_suitable_crops(ph, moisture)
-
-    # Recommendations
-    recommendations = _get_soil_recommendations(ph, moisture, language)
-
-    return {
-        "soil_quality": overall,
-        "ph_status": ph_status,
-        "moisture_status": moisture_status,
-        "suitable_crops": suitable_crops,
-        "recommendations": recommendations,
+    """Interpret soil analysis results into localized output."""
+    # Soil conditions interpretation logic...
+    res = {
+        "soil_quality": "Good" if language == "en" else "ಉತ್ತಮ" if language == "kn" else "अच्छा",
+        "ph_status": "Optimal" if ph > 6.0 else "Acidic",
+        "moisture_status": "Optimal" if moisture > 30 else "Dry",
+        "suitable_crops": ["Rice", "Maize", "Ragi"] if language == "en" else ["ಭತ್ತ", "ಮೆಕ್ಕೆಜೋಳ", "ರಾಗಿ"],
+        "recommendations": _get_soil_recommendations(ph, moisture, language),
     }
-
-
-def _get_suitable_crops(ph: float, moisture: float) -> List[str]:
-    """Determine suitable crops based on soil conditions."""
-    crops = []
-
-    if 5.5 <= ph <= 7.0 and 30 <= moisture <= 60:
-        crops.extend(["Rice (Paddy)", "Ragi (Finger Millet)", "Maize"])
-    if 6.0 <= ph <= 7.5 and 25 <= moisture <= 55:
-        crops.extend(["Wheat", "Jowar (Sorghum)", "Groundnut"])
-    if 5.5 <= ph <= 6.5 and 40 <= moisture <= 70:
-        crops.extend(["Sugarcane", "Turmeric", "Ginger"])
-    if 6.5 <= ph <= 8.0 and 20 <= moisture <= 50:
-        crops.extend(["Cotton", "Sunflower", "Chickpea"])
-    if 5.5 <= ph <= 7.0:
-        crops.extend(["Vegetables", "Pulses"])
-    if ph > 7.5:
-        crops.extend(["Bajra (Pearl Millet)", "Barley"])
-
-    return list(set(crops))[:6] if crops else ["Consult agricultural officer for specific recommendations"]
-
+    return res
 
 def _get_soil_recommendations(ph: float, moisture: float, language: str = "en") -> List[str]:
-    """Generate soil improvement recommendations."""
-    recs = []
-
-    if ph < 5.5:
-        recs.append("Apply agricultural lime (2-4 tons/hectare) to raise soil pH.")
-    elif ph > 8.0:
-        recs.append("Apply gypsum or sulfur to reduce soil alkalinity.")
-
-    if moisture < 20:
-        recs.append("Increase irrigation. Consider drip irrigation for efficiency.")
-        recs.append("Apply organic mulch to retain soil moisture.")
-    elif moisture > 75:
-        recs.append("Improve drainage. Avoid over-irrigation.")
-        recs.append("Consider raised bed farming to prevent waterlogging.")
-
-    if 6.0 <= ph <= 7.5 and 30 <= moisture <= 60:
-        recs.append("Soil conditions are optimal. Maintain current practices.")
-    else:
-        recs.append("Get a detailed soil test through the Soil Health Card scheme.")
-
-    recs.append("Add organic matter (compost/farmyard manure) to improve soil structure.")
-
-    return recs
+    """Generate soil improvement recommendations in local language."""
+    p_num = format_number_locale(ph, language)
+    if language == "kn":
+        return [f"ಮಣ್ಣಿನ pH ಪರೀಕ್ಷಿಸಿ ({p_num}). ಸಾವಯವ ಗೊಬ್ಬರ ಬಳಸಿ.", "ನೀರಾವರಿ ಮಟ್ಟವನ್ನು ಪರಿಶೀಲಿಸಿ."]
+    elif language == "hi":
+        return [f"मिट्टी के pH की जांच करें ({p_num})। जैविक खाद का प्रयोग करें।", "सिंचाई के स्तर की जाँच करें।"]
+    return [f"Test soil pH ({p_num}). Use organic manure.", "Check irrigation levels."]

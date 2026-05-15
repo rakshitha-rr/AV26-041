@@ -1,229 +1,211 @@
 'use client';
+
 import { useState, useRef, useEffect } from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 
-const exampleQueries = [
-  "What is the best fertilizer for Rice?",
-  "How to control fall armyworm in Maize?",
-  "Tell me about PM-KISAN eligibility.",
-  "Symptoms of low nitrogen in soil."
-];
-
+/**
+ * Farming Advisor - Multilingual Voice AI Agent
+ * Supports EN, HI, KN with Speech-to-Text and Text-to-Speech.
+ */
 export default function ChatbotPage() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [scanning, setScanning] = useState(false);
-  const [gallery, setGallery] = useState([]);
+  const [recording, setRecording] = useState(false);
+  const { language: lang, switchLanguage, t } = useLanguage();
   const chatEndRef = useRef(null);
-  const fileInputRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
 
   useEffect(() => {
-    const saved = localStorage.getItem('agri_chat_history');
-    if (saved) setMessages(JSON.parse(saved));
-    const savedGallery = localStorage.getItem('agri_pest_gallery');
-    if (savedGallery) setGallery(JSON.parse(savedGallery));
+    const savedMsgs = localStorage.getItem('agri_chat_history');
+    if (savedMsgs) setMessages(JSON.parse(savedMsgs));
+    
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
-  const saveState = (msgs, gal) => {
+  const saveState = (msgs) => {
     localStorage.setItem('agri_chat_history', JSON.stringify(msgs));
-    if (gal) localStorage.setItem('agri_pest_gallery', JSON.stringify(gal));
   };
 
+  // ─── Text Chat ───────────────────────────────────────────────
   const handleSend = async (msg = input) => {
     if (!msg.trim()) return;
-    const newMsgs = [...messages, { role: 'user', content: msg }];
+    const userMsg = { role: 'user', content: msg, type: 'text' };
+    const newMsgs = [...messages, userMsg];
     setMessages(newMsgs);
     setInput('');
     setLoading(true);
     
+    const apiHost = window.location.hostname;
     try {
-      const lang = localStorage.getItem('agri_lang') || 'en';
-      const res = await fetch('/api/chat', {
+      const res = await fetch(`http://${apiHost}:8000/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: msg, language: lang }),
+        body: JSON.stringify({ query: msg, language: lang }),
       });
       const data = await res.json();
-      const finalMsgs = [...newMsgs, { role: 'assistant', content: data.response }];
+      const assistantMsg = { role: 'assistant', content: data.response, type: 'text' };
+      const finalMsgs = [...newMsgs, assistantMsg];
       setMessages(finalMsgs);
       saveState(finalMsgs);
     } catch {
-      setMessages([...newMsgs, { role: 'assistant', content: "⚠️ Connection to AI Advisor failed. Please check your network." }]);
+      setMessages([...newMsgs, { role: 'assistant', content: "⚠️ Connection failed.", type: 'text' }]);
     } finally {
       setLoading(false);
       chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setScanning(true);
-    
-    const formData = new FormData();
-    formData.append('image', file);
-    
+  // ─── Voice AI ───────────────────────────────────────────────
+  const startRecording = async () => {
     try {
-      const res = await fetch('/api/chat/image', { method: 'POST', body: formData });
-      const data = await res.json();
-      setTimeout(() => {
-        const newGallery = [data.detection, ...gallery].slice(0, 4);
-        setGallery(newGallery);
-        const finalMsgs = [...messages, 
-          { role: 'user', content: "[Neural Scan initiated]" },
-          { role: 'assistant', content: `🔍 **Pest Diagnosis Complete**\n\nDetected: **${data.detection.pest}** (${data.detection.confidence}% confidence)\nCrop: ${data.detection.crop}\n\n**Recommendation:** ${data.detection.treatment}` }
-        ];
-        setMessages(finalMsgs);
-        saveState(finalMsgs, newGallery);
-        setScanning(false);
-      }, 3000);
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorderRef.current = new MediaRecorder(stream);
+      chunksRef.current = [];
+      mediaRecorderRef.current.ondataavailable = (e) => chunksRef.current.push(e.data);
+      mediaRecorderRef.current.onstop = () => {
+        const audioBlob = new Blob(chunksRef.current, { type: 'audio/wav' });
+        sendVoiceQuery(audioBlob);
+      };
+      mediaRecorderRef.current.start();
+      setRecording(true);
     } catch {
-      setScanning(false);
-      alert('Scanning failed');
+      alert("Microphone access denied.");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && recording) {
+      mediaRecorderRef.current.stop();
+      setRecording(false);
+      mediaRecorderRef.current.stream.getTracks().forEach(t => t.stop());
+    }
+  };
+
+  const sendVoiceQuery = async (blob) => {
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('audio', blob, 'query.wav');
+    formData.append('language', lang);
+
+    const tempMsgs = [...messages, { role: 'user', content: "🎤 [Voice Query]", type: 'voice' }];
+    setMessages(tempMsgs);
+
+    const apiHost = window.location.hostname;
+    try {
+      const res = await fetch(`http://${apiHost}:8000/api/voice/voice-assistant`, {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      
+      const assistantMsg = { 
+        role: 'assistant', 
+        content: data.text_response, 
+        audio: `http://${apiHost}:8000${data.audio_url}`,
+        type: 'voice' 
+      };
+      
+      const finalMsgs = [...tempMsgs, assistantMsg];
+      setMessages(finalMsgs);
+      saveState(finalMsgs);
+      
+      // Auto-play response
+      const audio = new Audio(`http://${apiHost}:8000${data.audio_url}`);
+      audio.play();
+    } catch {
+      setMessages([...tempMsgs, { role: 'assistant', content: "⚠️ Voice failed.", type: 'text' }]);
+    } finally {
+      setLoading(false);
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
   return (
-    <div className="max-w-5xl mx-auto h-[calc(100vh-160px)] flex gap-8 animate-fade-in">
-      {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col app-card overflow-hidden">
-        <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-          <div className="flex items-center gap-3">
-             <div className="w-10 h-10 rounded-xl bg-[#1a4d2e] flex items-center justify-center text-white text-xl">🤖</div>
-             <div>
-               <h2 className="text-base font-extrabold text-gray-900">AI Farming Advisor</h2>
-               <div className="flex items-center gap-2">
-                 <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Active Support</span>
-               </div>
-             </div>
+    <div className="max-w-4xl mx-auto h-[85vh] flex flex-col bg-white rounded-[2.5rem] shadow-2xl overflow-hidden border border-gray-100">
+      
+      {/* Header */}
+      <div className="bg-[#1a4d2e] p-6 text-white flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-2xl">🤖</div>
+          <div>
+            <h1 className="font-black text-lg tracking-tight">{t('chatbot_title')}</h1>
+            <p className="text-xs text-white/60 font-bold uppercase tracking-widest">{t('chatbot_subtitle')}</p>
           </div>
-          <button onClick={() => { setMessages([]); setGallery([]); localStorage.clear(); }} className="text-[10px] font-bold text-red-500 uppercase tracking-widest hover:bg-red-50 px-3 py-1.5 rounded-lg transition-all">
-            Clear History
-          </button>
         </div>
-
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
-          {messages.length === 0 && (
-            <div className="h-full flex flex-col items-center justify-center text-center max-w-sm mx-auto space-y-6">
-              <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center text-3xl mb-2">👋</div>
-              <div>
-                <h3 className="text-xl font-extrabold text-gray-900">How can I help you today?</h3>
-                <p className="text-sm text-gray-500 mt-2">Ask about soil health, pest control, or government schemes.</p>
-              </div>
-              <div className="grid gap-2 w-full">
-                {exampleQueries.map((q, i) => (
-                  <button key={i} onClick={() => handleSend(q)} className="text-left p-4 bg-white border border-gray-100 rounded-xl text-xs font-bold text-gray-600 hover:border-[#1a4d2e]/30 hover:bg-gray-50 transition-all">
-                    {q}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {messages.map((m, i) => (
-            <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] p-4 rounded-2xl text-sm leading-relaxed ${m.role === 'user' ? 'bg-[#1a4d2e] text-white' : 'bg-gray-100 text-gray-800 border border-gray-200'}`}>
-                {m.content.split('\n').map((line, j) => (
-                  <p key={j} className={line.startsWith('-') || line.startsWith('1.') ? 'ml-2' : 'mb-1'}>
-                    {line}
-                  </p>
-                ))}
-              </div>
-            </div>
-          ))}
-
-          {loading && (
-            <div className="flex justify-start">
-               <div className="bg-gray-100 p-4 rounded-2xl flex gap-1.5">
-                  <div className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce" />
-                  <div className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce delay-75" />
-                  <div className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce delay-150" />
-               </div>
-            </div>
-          )}
-          
-          {scanning && (
-            <div className="app-card p-8 bg-[#1a4d2e]/5 border-[#1a4d2e]/20 text-center space-y-6">
-               <div className="relative w-24 h-24 mx-auto">
-                 <div className="absolute inset-0 border-4 border-[#1a4d2e]/10 rounded-full" />
-                 <div className="absolute inset-0 border-4 border-t-[#1a4d2e] rounded-full animate-spin" />
-                 <div className="absolute inset-0 flex items-center justify-center text-3xl">🔬</div>
-               </div>
-               <div>
-                 <h4 className="text-lg font-bold text-[#1a4d2e]">Neural Scan in Progress</h4>
-                 <p className="text-xs text-gray-500 font-medium mt-1">Analyzing tissue samples and pest patterns...</p>
-               </div>
-            </div>
-          )}
-          <div ref={chatEndRef} />
-        </div>
-
-        <div className="p-6 border-t border-gray-100 bg-gray-50/30">
-          <div className="flex gap-4">
+        
+        {/* Language Switcher */}
+        <div className="flex bg-white/10 p-1 rounded-xl border border-white/10">
+          {['en', 'kn', 'hi'].map((l) => (
             <button 
-              onClick={() => fileInputRef.current.click()}
-              className="w-12 h-12 bg-white border border-gray-200 rounded-xl flex items-center justify-center text-xl hover:bg-gray-50 transition-all shadow-sm"
-              title="Upload Image for Scan"
+              key={l}
+              onClick={() => switchLanguage(l)}
+              className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${lang === l ? 'bg-white text-[#1a4d2e]' : 'text-white/60 hover:text-white'}`}
             >
-              📷
+              {l}
             </button>
-            <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
-            <div className="flex-1 relative">
-              <input 
-                type="text" value={input} onChange={e => setInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSend()}
-                placeholder="Type your question here..."
-                className="w-full h-12 bg-white border border-gray-200 rounded-xl pl-6 pr-12 text-sm font-medium focus:outline-none focus:border-[#1a4d2e] shadow-sm"
-              />
-              <button 
-                onClick={() => handleSend()}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-[#1a4d2e] text-white rounded-lg flex items-center justify-center hover:bg-[#1a4d2e]/90 transition-all"
-              >
-                ➔
-              </button>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Side Profile / Gallery */}
-      <div className="w-80 hidden lg:flex flex-col gap-6">
-        <div className="app-card p-6">
-           <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
-             <span className="w-1 h-4 bg-[#1a4d2e] rounded-full" />
-             Neural History
-           </h3>
-           <div className="space-y-4">
-             {gallery.length === 0 ? (
-               <div className="py-8 text-center text-gray-400 text-[10px] italic">
-                 No recent scans. Upload an image to begin.
-               </div>
-             ) : (
-               gallery.map((item, i) => (
-                 <div key={i} className="p-4 bg-gray-50 border border-gray-100 rounded-xl space-y-2">
-                    <div className="flex justify-between items-start">
-                       <span className="text-[10px] font-bold text-[#1a4d2e] uppercase tracking-widest">{item.pest}</span>
-                       <span className="text-[9px] font-black text-gray-400">{item.confidence}%</span>
-                    </div>
-                    <p className="text-[10px] text-gray-500 line-clamp-2 leading-relaxed">{item.treatment}</p>
-                 </div>
-               ))
-             )}
-           </div>
-        </div>
+      {/* Chat Area */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50/50">
+        {messages.length === 0 && (
+          <div className="h-full flex flex-col items-center justify-center text-center opacity-40">
+            <span className="text-6xl mb-4">🌾</span>
+            <h3 className="text-xl font-bold text-gray-900">{t('how_can_help')}</h3>
+            <p className="text-xs font-medium max-w-xs mt-2">{t('ask_me')}</p>
+          </div>
+        )}
+        
+        {messages.map((m, i) => (
+          <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
+            <div className={`max-w-[80%] p-5 rounded-[1.5rem] shadow-sm ${m.role === 'user' ? 'bg-[#1a4d2e] text-white rounded-tr-none' : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'}`}>
+              <p className="text-sm font-medium leading-relaxed">{m.content}</p>
+              {m.audio && (
+                <button onClick={() => new Audio(m.audio).play()} className="mt-3 flex items-center gap-2 text-[10px] font-black uppercase bg-gray-100 px-3 py-1.5 rounded-lg text-[#1a4d2e]">
+                  <span>🔊</span> {t('replay_voice')}
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+        <div ref={chatEndRef} />
+      </div>
 
-        <div className="app-card p-6 bg-gray-50/50">
-           <h3 className="text-sm font-bold text-gray-900 mb-2">AI Capability</h3>
-           <p className="text-[11px] text-gray-500 leading-relaxed">
-             Our models are trained on 10,000+ agricultural datasets covering Indian climate zones and soil types.
-           </p>
-           <div className="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center">
-              <span className="text-[9px] font-bold text-gray-400 uppercase">Knowledge Cutoff</span>
-              <span className="text-[9px] font-black text-gray-900">MAY 2026</span>
-           </div>
+      {/* Input Area */}
+      <div className="p-6 bg-white border-t border-gray-100">
+        <div className="flex items-center gap-4">
+          <button 
+            onMouseDown={startRecording}
+            onMouseUp={stopRecording}
+            className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-all shadow-lg ${recording ? 'bg-red-500 text-white animate-pulse scale-110' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}
+          >
+            {recording ? '⏹️' : '🎤'}
+          </button>
+          
+          <div className="flex-1 relative">
+            <input 
+              type="text" value={input} onChange={e => setInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSend()}
+              placeholder={t('type_question')}
+              className="w-full bg-gray-100 border-none rounded-2xl px-6 py-4 text-sm font-medium focus:ring-2 focus:ring-[#1a4d2e] transition-all"
+            />
+            <button onClick={() => handleSend()} className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-[#1a4d2e] text-white rounded-xl flex items-center justify-center shadow-lg">
+              ➔
+            </button>
+          </div>
         </div>
+        
+        {recording && (
+          <div className="mt-4 flex items-center justify-center gap-2 animate-fade-in">
+            <div className="flex gap-1">
+              {[1,2,3,4].map(i => <div key={i} className="w-1 h-4 bg-red-400 rounded-full animate-bounce" style={{animationDelay: `${i*0.1}s`}} />)}
+            </div>
+            <span className="text-[10px] font-black text-red-500 uppercase tracking-widest">{t('listening')}</span>
+          </div>
+        )}
       </div>
     </div>
   );
